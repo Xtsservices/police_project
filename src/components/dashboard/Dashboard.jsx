@@ -294,8 +294,7 @@ const Dashboard = () => {
                     <StatusCard
                       title="Active"
                       value={
-                        dashboardData.users.byRoleAndStatus.hospital_admin
-                          .active
+                        dashboardData?.users?.byRoleAndStatus?.hospital_admin?.active
                       }
                       color={statusColors.active}
                     />
@@ -304,8 +303,7 @@ const Dashboard = () => {
                     <StatusCard
                       title="Inactive"
                       value={
-                        dashboardData.users.byRoleAndStatus.hospital_admin
-                          .inactive
+                        dashboardData?.users?.byRoleAndStatus?.hospital_admin?.inactive
                       }
                       color={statusColors.inactive}
                     />
@@ -314,8 +312,7 @@ const Dashboard = () => {
                     <StatusCard
                       title="Rejected"
                       value={
-                        dashboardData.users.byRoleAndStatus.hospital_admin
-                          .rejected
+                        dashboardData?.users?.byRoleAndStatus?.hospital_admin?.rejected
                       }
                       color={statusColors.rejected}
                     />
