@@ -2,7 +2,7 @@
 import axios from "axios";
 // const API_BASE_URL = "http://192.168.0.184:3100/api";
 // http://62.72.30.202/
-const API_BASE_URL = "http://62.72.30.202:3100";
+const API_BASE_URL = "http://62.72.30.202/api";
 
 // Helper to get token from localStorage (or any storage)
 const getToken = () => localStorage.getItem("accessToken");
