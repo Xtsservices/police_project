@@ -1,8 +1,8 @@
 // Import axios
 import axios from "axios";
-const API_BASE_URL = "http://192.168.0.184:3100/api";
-
-// const API_BASE_URL = "http://216.10.251.239:3000";
+// const API_BASE_URL = "http://192.168.0.184:3100/api";
+// http://62.72.30.202/
+const API_BASE_URL = "http://http://62.72.30.202:3100";
 
 // Helper to get token from localStorage (or any storage)
 const getToken = () => localStorage.getItem("accessToken");
