@@ -10,6 +10,7 @@ import SuperadminHospitalsList from "./components/dashboard/hospitals/Superadmin
 import HospitalAdminDashboard from "./components/hospitalAdmin/HospitalAdminDashboard";
 import HospitalAdminPatients from "./components/hospitalAdmin/hospitalAdminPatients/HospitalAdminPatients";
 import UserProfile from "./components/commonComponents/UserProfile";
+import PatientDashboard from "./components/PatientDashboard/PatientDashboard";
 
 const AppRoutes = () => {
   return (
@@ -66,6 +67,16 @@ const AppRoutes = () => {
           }
         />
       </Route>
+
+      {/* patients route /patient/dashboard*/}
+       <Route
+          path="/patient/dashboard"
+          element={
+            <ProtectedRoute>
+              <PatientDashboard />
+            </ProtectedRoute>
+          }
+        />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -58,17 +58,13 @@ const LayoutWrapper = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await apiPost("/auth/logout");
+      // const response = await apiPost("/auth/logout");
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("userID");
       localStorage.removeItem("role");
-      localStorage.removeItem("appointments");
       console.log("Logout successful:", response.data.message);
     } catch (error) {
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("userID");
       localStorage.removeItem("role");
-      localStorage.removeItem("appointments");
       console.error(
         "Logout API failed:",
         error.response?.statusText || error.message
@@ -223,12 +219,12 @@ const LayoutWrapper = () => {
                 <div className="sidebar-profile">
                   <div className="profile-avatar">
                     <img
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                      src="data:image/png;base64,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"
                       alt="Profile"
                     />
                   </div>
                   <h3 className="profile-name">
-                    {user?.firstname || ""} {user?.lastname || ""}
+                    {user?.name || ""} 
                   </h3>
                 </div>
               )}
@@ -253,12 +249,12 @@ const LayoutWrapper = () => {
                     >
                       <Link to="/SuperAdmin/hospitals">Hospitals</Link>
                     </Menu.Item>
-                    <Menu.Item
+                    {/* <Menu.Item
                       key="patients"
                       icon={<FontAwesomeIcon icon={faUsers} />}
                     >
                       <Link to="/SuperAdmin/patients">Patients</Link>
-                    </Menu.Item>
+                    </Menu.Item> */}
                     <Menu.Item
                       key="profile"
                       icon={<FontAwesomeIcon icon={faUser} />}

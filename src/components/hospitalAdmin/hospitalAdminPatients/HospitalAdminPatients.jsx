@@ -10,12 +10,14 @@ import {
   Typography,
   message,
   Select,
+  List,
 } from "antd";
 import { apiGet, apiPost } from "../../api";
 import { EyeOutlined } from "@ant-design/icons";
 import moment from "moment";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -30,12 +32,14 @@ const HospitalAdminPatients = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewReportModal, setViewReportModal] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState({ name: "", url: "" });
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [labReports, setLabReports] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [form] = Form.useForm();
   const fileInputRef = useRef(null);
-  const [uploadType, setUploadType] = useState(null); // lab_report or prescription
+  const [uploadType, setUploadType] = useState(null);
 
   async function getPatients(page = 1) {
     try {
@@ -76,9 +80,7 @@ const HospitalAdminPatients = () => {
       getPatients(currentPage);
       message.success("Patient added successfully");
     } catch (error) {
-      console.log("error", error);
-      toast.error(error.response.data.message);
-
+      toast.error(error.response?.data?.message || "Error occurred");
       console.error("Error adding patient:", error);
       message.error("Failed to add patient");
     }
@@ -99,9 +101,7 @@ const HospitalAdminPatients = () => {
       formData.append("documentType", type);
       try {
         await apiPost("/appointment-documents/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         });
         message.success(
           `${type === "prescription" ? "Prescription" : "Lab report"} uploaded`
@@ -109,6 +109,7 @@ const HospitalAdminPatients = () => {
         getPatients(currentPage);
         if (isInline) handleViewReport(appointmentId);
       } catch (error) {
+      toast.error(error.response?.data?.message || "Error occurred");
         console.error("Error uploading report:", error);
         message.error(
           error.response?.data?.message || "Failed to upload report"
@@ -129,18 +130,24 @@ const HospitalAdminPatients = () => {
       setSelectedAppointmentId(appointmentId);
       setViewReportModal(true);
     } catch (error) {
+      toast.error(error.response?.data?.message || "Error occurred");
       console.error("Error viewing report:", error);
       message.error("Failed to fetch reports");
     }
   }
 
-  const openInNewTab = (url) => {
-    console.log(url), "url";
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else {
-      message.error("File not found");
-    }
+  const handlePreview = (file) => {
+    setPreviewFile({ name: file.documentName, url: file.fileData });
+    setPreviewModalOpen(true);
+  };
+
+  const handleDownload = (file) => {
+    const link = document.createElement("a");
+    link.href = file.fileData;
+    link.download = file.documentName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   useEffect(() => {
@@ -188,6 +195,25 @@ const HospitalAdminPatients = () => {
     },
   ];
 
+  const handleCompleteAppointment = async (id) => {
+    try {
+      const response = await apiPost("/appointments/updateAppointment", {
+        id,
+        status: "completed",
+      });
+      console.log("handleCompleteAppointment", response);
+      if(response.status === 200){
+      toast.success(response?.data?.message);
+
+        getPatients(currentPage);
+
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error occurred");
+      console.log("handleCompleteAppointmenterror", error);
+    }
+  };
+
   return (
     <div style={{ padding: 24 }}>
       <div
@@ -230,10 +256,10 @@ const HospitalAdminPatients = () => {
           pageSize={pagination.recordsPerPage}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
-          showQuickJumper={false}
         />
       </div>
 
+      {/* Add Patient Modal */}
       <Modal
         title="Add Patient"
         open={isModalOpen}
@@ -247,9 +273,7 @@ const HospitalAdminPatients = () => {
           <Form.Item
             name="name"
             label="Name"
-            rules={[
-              { required: true, message: "Please enter the patient's name" },
-            ]}
+            rules={[{ required: true, message: "Please enter the name" }]}
           >
             <Input placeholder="Enter name" />
           </Form.Item>
@@ -268,11 +292,8 @@ const HospitalAdminPatients = () => {
             name="mobile"
             label="Mobile"
             rules={[
-              { required: true, message: "Please enter the mobile number" },
-              {
-                pattern: /^\d{10}$/,
-                message: "Mobile number must be 10 digits",
-              },
+              { required: true, message: "Enter mobile number" },
+              { pattern: /^\d{10}$/, message: "Must be 10 digits" },
             ]}
           >
             <Input placeholder="Enter mobile number" />
@@ -281,11 +302,8 @@ const HospitalAdminPatients = () => {
             name="aadhar"
             label="Aadhar"
             rules={[
-              { required: true, message: "Please enter the Aadhar number" },
-              {
-                pattern: /^\d{12}$/,
-                message: "Aadhar number must be 12 digits",
-              },
+              { required: true, message: "Enter Aadhar number" },
+              { pattern: /^\d{12}$/, message: "Must be 12 digits" },
             ]}
           >
             <Input placeholder="Enter Aadhar number" />
@@ -293,9 +311,7 @@ const HospitalAdminPatients = () => {
           <Form.Item
             name="policeIdNo"
             label="Police ID No"
-            rules={[
-              { required: true, message: "Please enter the Police ID number" },
-            ]}
+            rules={[{ required: true, message: "Enter Police ID number" }]}
           >
             <Input placeholder="Enter Police ID number" />
           </Form.Item>
@@ -316,6 +332,7 @@ const HospitalAdminPatients = () => {
         </Form>
       </Modal>
 
+      {/* View Reports Modal */}
       <Modal
         title="Patient Reports"
         open={viewReportModal}
@@ -339,18 +356,24 @@ const HospitalAdminPatients = () => {
           Upload Lab Report
         </Button>
         {labReports.length > 0 ? (
-          <ul>
-            {labReports.map((report, index) => (
-              <li key={index}>
-                <Button
-                  type="link"
-                  onClick={() => openInNewTab(report.fileData)}
-                >
-                  View Lab Report {index + 1}
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <List
+            itemLayout="horizontal"
+            dataSource={labReports}
+            renderItem={(item, index) => (
+              <List.Item
+                actions={[
+                  <Button type="link" onClick={() => handlePreview(item)}>
+                    View
+                  </Button>,
+                  <Button type="link" onClick={() => handleDownload(item)}>
+                    Download
+                  </Button>,
+                ]}
+              >
+                <List.Item.Meta title={item.documentName} />
+              </List.Item>
+            )}
+          />
         ) : (
           <p>No lab reports uploaded.</p>
         )}
@@ -368,20 +391,71 @@ const HospitalAdminPatients = () => {
           Upload Prescription
         </Button>
         {prescriptions.length > 0 ? (
-          <ul>
-            {prescriptions.map((prescription, index) => (
-              <li key={index}>
-                <Button
-                  type="link"
-                  onClick={() => openInNewTab(prescription.fileData)}
-                >
-                  View Prescription {index + 1}
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <List
+            itemLayout="horizontal"
+            dataSource={prescriptions}
+            renderItem={(item, index) => (
+              <List.Item
+                actions={[
+                  <Button type="link" onClick={() => handlePreview(item)}>
+                    View
+                  </Button>,
+                  <Button type="link" onClick={() => handleDownload(item)}>
+                    Download
+                  </Button>,
+                ]}
+              >
+                <List.Item.Meta
+                  title={`Prescription ${index + 1}`}
+                  description={item.documentName}
+                />
+              </List.Item>
+            )}
+          />
         ) : (
           <p>No prescriptions available.</p>
+        )}
+
+        <div style={{ textAlign: "center", marginBottom: 12 }}>
+          <Button
+            type="primary" // ← changed from "primary"
+            onClick={() =>
+              handleCompleteAppointment(
+                selectedAppointmentId,
+                "lab_report",
+                true
+              )
+            }
+          >
+            Complete Appointment
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Preview Modal */}
+      <Modal
+        open={previewModalOpen}
+        title={previewFile.name}
+        onCancel={() => {
+          setPreviewModalOpen(false);
+          setPreviewFile({ name: "", url: "" });
+        }}
+        footer={null}
+        width={900}
+        bodyStyle={{ height: "80vh", overflow: "auto" }}
+      >
+        {previewFile.url.includes("application/pdf") ? (
+          <iframe
+            src={previewFile.url}
+            title="PDF Preview"
+            style={{ width: "100%", height: "100%", border: "none" }}
+          />
+        ) : (
+          <img
+            src={previewFile.url}
+            alt={previewFile.name}
+            style={{ maxWidth: "100%", maxHeight: "100%" }}
+          />
         )}
       </Modal>
 

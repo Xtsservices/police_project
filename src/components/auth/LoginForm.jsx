@@ -1,4 +1,6 @@
+// LoginForm.jsx
 import React from "react";
+import logo from "../../assets/cross_logo.png";
 
 const LoginForm = ({
   otpSent,
@@ -12,27 +14,71 @@ const LoginForm = ({
   onSendOTP,
   onVerifyOTP,
   onReset,
-  onToggleForm, // Added prop for toggling to registration form
+  onToggleForm,
+  selectedUserType,
+  onSelectUserType,
 }) => {
   const handleKeyDown = (e) => {
-    console.log("e.key", e.target.name);
     if (e.key === "Enter" && e.target.name === "phone") {
       onSendOTP();
-    } else if (e.target.value.length ===6 && e.target.name === "verifyotp") {
+    } else if (e.target.value.length === 6 && e.target.name === "verifyotp") {
       onVerifyOTP();
     }
   };
 
+  const userTypes = [
+    { label: "Admin", value: "admin" },
+    { label: "Hospital User", value: "hospital" },
+    { label: "Patient", value: "patient" },
+  ];
+
   return (
     <div className="login-form">
-      <div className="form-header">
+      <div className="form-header" style={{ textAlign: "center" }}>
         <h1 className="form-title">{otpSent ? "Enter OTP" : ""}</h1>
+        <img
+          src={logo}
+          style={{ height: "120px", width: "120px", marginBottom: "10px" }}
+        />
         {!otpSent && (
-          <p className="form-subtitle">
-            Enter your registered mobile number to continue
-          </p>
+          <>
+            <h3 style={{ marginBottom: "8px" }}>I am</h3>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "12px",
+                marginBottom: "20px",
+              }}
+            >
+              {userTypes.map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => onSelectUserType(type.value)}
+                  style={{
+                    padding: "10px 16px",
+                    borderRadius: "10px",
+                    border:
+                      selectedUserType === type.value
+                        ? "2px solid #1890ff"
+                        : "1px solid #ccc",
+                    background:
+                      selectedUserType === type.value ? "#e6f7ff" : "#fff",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+            <p className="form-subtitle">
+              Enter your registered mobile number to continue
+            </p>
+          </>
         )}
       </div>
+
       {!otpSent ? (
         <div className="form-content">
           <div className="input-group">
@@ -52,7 +98,7 @@ const LoginForm = ({
           </div>
           <button
             onClick={onSendOTP}
-            disabled={!phone || phone.length !== 10 || isLoading}
+            disabled={!phone || phone.length !== 10 || isLoading || !selectedUserType}
             className="action-button"
           >
             {isLoading ? "Sending OTP..." : "Send OTP"}
@@ -62,8 +108,7 @@ const LoginForm = ({
         <div className="form-content">
           <div className="otp-info">
             <p>
-              OTP sent to +91 {phone}
-              {userTypeDisplay}
+              OTP sent to +91 {phone} {userTypeDisplay}
             </p>
             <button onClick={onReset} className="text-button">
               ← Change number
@@ -109,17 +154,17 @@ const LoginForm = ({
       )}
       <div className="form-footer">
         <p>
-          By continuing, you agree to our{" "}
+          By continuing, you agree to our {" "}
           <a href="#" className="link">
             Terms of Service
           </a>{" "}
-          and{" "}
+          and {" "}
           <a href="#" className="link">
             Privacy Policy
           </a>
         </p>
         <p>
-          Don't have an account?{" "}
+          Don't have an account? {" "}
           <a onClick={onToggleForm} className="link" style={{ cursor: "pointer" }}>
             Register
           </a>

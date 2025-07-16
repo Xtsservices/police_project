@@ -12,7 +12,7 @@ import loginImg from "../../assets/login.jpg";
 import { useDispatch } from "react-redux";
 
 const LoginRegister = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +23,8 @@ const LoginRegister = () => {
   const [userId, setUserId] = useState("");
   const [currentUserType, setCurrentUserType] = useState("");
   const [isRegisterForm, setIsRegisterForm] = useState(false);
+  const [selectedUserType, setSelectedUserType] = useState("hospital");
+
   const [formData, setFormData] = useState({
     name: "",
     licenseNumber: "",
@@ -67,42 +69,41 @@ const LoginRegister = () => {
   const validatePhone = (phoneNumber) => /^[0-9]{10}$/.test(phoneNumber);
 
   const getRouteFromUserType = (role) => {
-    console.log("role",role)
+    console.log("role", role);
     if (role === "super_admin") return "/SuperAdmin/dashboard";
     if (role === "hospital_admin") return "/hospitaladmin/patients";
+
+    return "/patient/dashboard";
   };
 
-
   // send otp to user
+
+  console.log("selectedUserType", selectedUserType);
+
   const handleSendOTP = async () => {
     if (!validatePhone(phone)) {
-      message.error("Please enter a valid 10-digit mobile number");
-      toast.error("Please enter a valid 10-digit mobile number");
-      return;
+      return toast.error("Please enter a valid 10-digit mobile number");
     }
-    setIsLoading(true);
+
+    const endpoint =
+      selectedUserType === "patient"
+        ? "/patient-auth/generate-otp"
+        : "/auth/generate-otp";
+    const payload =
+      selectedUserType === "patient" ? { mobile: phone } : { phone };
     try {
-      console.log("generateotpdata", phone);
+      setIsLoading(true);
+      const data = await apiPostWithoutToken(endpoint, payload);
 
-      const data = await apiPostWithoutToken("/auth/generate-otp", { phone });
-
-      console.log("generateotpdata", data);
-
-      if (data.data.userId || data.data.success !== false) {
+      if (data.data?.userId || data.data?.success !== false) {
         setOtpSent(true);
         setOtpTimer(60);
-        message.success(data.data.message || "OTP sent successfully!");
-        toast.success(data.data.message || "OTP sent successfully!");
+        toast.success(data.data?.message || "OTP sent successfully!");
       } else {
-        message.error(data.data.message || "Failed to send OTP.");
-        toast.error(data.data.message || "Failed to send OTP.");
+        toast.error(data.data?.message || "Failed to send OTP.");
       }
-    } catch (error) {
-      console.log("error=========", error);
-      if (error?.response?.data?.message) {
-        toast.error(error.response.data.message);
-        return;
-      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "OTP send failed");
     } finally {
       setIsLoading(false);
     }
@@ -116,30 +117,49 @@ const LoginRegister = () => {
     }
 
     setIsLoading(true);
+    const endpoint =
+      selectedUserType === "patient"
+        ? "/patient-auth/verify-otp"
+        : "/auth/verify-otp";
+
     try {
-      const data = await apiPostWithoutToken("/auth/verify-otp", {
-        otp: otp,
-        phone: phone,
-      });
+      const payload =
+        selectedUserType === "patient"
+          ? { mobile: phone, otp }
+          : { phone, otp };
+      const data = await apiPostWithoutToken(endpoint, payload);
 
       console.log("verify", data);
       if (data.status === 200) {
+        const loginAs = data.data.message;
+        console.log("loginAs", loginAs);
         toast.success(`Login successful`);
+
+        let userData = null;
+        let role = "patient";
+        if (loginAs === "Patient login successful") {
+          userData = data?.data?.data?.patient;
+        } else {
+          userData = data?.data?.data?.user;
+          role = userData.role;
+        }
 
         const hospitalData = data?.data?.data?.hospital;
         const accessToken = data?.data?.data?.session?.token;
-        const userData = data?.data?.data?.user;
-         if (userData) {
-        dispatch({
-          type: "currentUserData",
-          payload: userData,
-        });
-      }
+
+        if (userData) {
+          dispatch({
+            type: "currentUserData",
+            payload: userData,
+          });
+        }
 
         localStorage.setItem("accessToken", accessToken);
-        console.log("hospitalData",hospitalData)
-        console.log("accessToken",accessToken)
-        console.log("user",userData)
+        localStorage.setItem("role", role);
+
+        console.log("hospitalData", hospitalData);
+        console.log("accessToken", accessToken);
+        console.log("user", userData);
         const redirectRoute = getRouteFromUserType(userData.role);
         setTimeout(() => navigate(redirectRoute), 1000);
       }
@@ -618,6 +638,8 @@ const LoginRegister = () => {
             onVerifyOTP={handleOTPVerification}
             onReset={resetPhoneLogin}
             onToggleForm={() => setIsRegisterForm(true)}
+            selectedUserType={selectedUserType}
+            onSelectUserType={setSelectedUserType}
           />
         )}
       </div>
