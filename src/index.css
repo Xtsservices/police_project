@@ -1,0 +1,32 @@
+@import 'antd/dist/reset.css';
+
+/* src/index.css */
+body {
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+.sider {
+  background: #001529 !important;
+}
+
+/* .sider .ant-menu {
+  background: #001529 !important;
+} */
+
+.sider .ant-menu-item {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.sider .ant-menu-item:hover,
+.sider .ant-menu-item-selected {
+  color: #fff !important;
+  background: #1890ff !important;
+}
+
+.sider .ant-menu-item .anticon {
+  margin-right: 8px !important;
+}
